@@ -5,7 +5,7 @@ TEA 编码算法的 PLAN9 汇编优化实现
 速度已经达到最优，代码与[MiraiGo](https://github.com/Mrs4s/MiraiGo/blob/574c4e57b1467225f03936342e477ee0d587a2dc/binary/tea.go)完全相同。
 
 ## 1.16 版本及以下
-使用 PLAN9 汇编编写`Encrypt`，内联编写`Decrypt`，与[MiraiGo](https://github.com/Mrs4s/MiraiGo/blob/574c4e57b1467225f03936342e477ee0d587a2dc/binary/tea.go)代码相比，在`1.16`版本下编译提升速度如下（new16.txt）。
+使用 PLAN9 汇编编写`Encrypt`，内联编写`Decrypt`，与[MiraiGo](https://github.com/Mrs4s/MiraiGo/blob/574c4e57b1467225f03936342e477ee0d587a2dc/binary/tea.go)代码同在`go1.16`版本下编译相比，提升速度如下（new16.txt）。
 ```css
 name         old time/op    new time/op    delta
 TEAen/16-8      252ns ± 0%     240ns ± 1%  -4.50%  (p=0.000 n=9+10)
@@ -27,7 +27,7 @@ TEAde/256-8   160MB/s ± 1%   164MB/s ± 1%  +2.77%  (p=0.000 n=10+10)
 TEAde/4K-8    162MB/s ± 1%   167MB/s ± 1%  +2.80%  (p=0.000 n=10+10)
 TEAde/32K-8   159MB/s ± 0%   164MB/s ± 0%  +2.66%  (p=0.000 n=9+10)
 ```
-另外升级到`go1.17`后，即与[MiraiGo](https://github.com/Mrs4s/MiraiGo/blob/574c4e57b1467225f03936342e477ee0d587a2dc/binary/tea.go)代码相同时，在`1.16`版本下编译提升速度如下（new17.txt）。
+另外[MiraiGo](https://github.com/Mrs4s/MiraiGo/blob/574c4e57b1467225f03936342e477ee0d587a2dc/binary/tea.go)本身在`go1.16`版本与在`go1.17`版本下编译相比，提升速度如下（new17.txt）。
 ```css
 name         old time/op    new time/op    delta
 TEAen/16-8      252ns ± 0%     241ns ± 1%  -4.09%  (p=0.000 n=9+10)
@@ -49,4 +49,4 @@ TEAde/256-8   160MB/s ± 1%   165MB/s ± 1%  +3.55%  (p=0.000 n=10+10)
 TEAde/4K-8    162MB/s ± 1%   168MB/s ± 0%  +3.52%  (p=0.000 n=10+10)
 TEAde/32K-8   159MB/s ± 0%   165MB/s ± 0%  +3.45%  (p=0.000 n=9+9)
 ```
-可见在编码时，在某些时候`go1.16`版本下速度比`go1.17`版本更快，而整体来看，在优化后`go1.16`版本下的执行效率已经可以与`go1.17`版本持平。
+可见在编码时，在`go1.16`版本下的某些时候（编码大小在`0-16kb`之间），`gofastTEA`比`go1.17`版本的`MiraiGo`实现更快，且整体来看，`gofastTEA`在`go1.16`版本下的执行效率已经可以与`MiraiGo`实现的`go1.17`版本基本持平。
