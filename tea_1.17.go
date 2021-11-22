@@ -1,5 +1,5 @@
-//go:build go1.17
-// +build go1.17
+//go:build go1.17 && amd64
+// +build go1.17,amd64
 
 package tea
 
