@@ -7,23 +7,23 @@
 TEXT ·encrypt(SB), NOSPLIT, $0-16
 	MOVQ	·dstlen+0(FP), AX	// go:<1.17 dst
 	MOVQ	·teaptr+8(FP), DI	// go:<1.17 t
-	MOVQ	AX, BX		// len(dst) low 40 bits
+	MOVQ	AX, BX		// len(dst) low 24 bits
+	MOVQ	DI, R8		// len(dst) middle 24 bits
 	SHRQ	$40, BX		// unpack len
 	SHLQ	$24, AX
 	SHRQ	$24, AX
-	MOVQ	DI, R8		// len(dst) high 24 bits
 	SHLQ	$24, DI
 	SHRQ	$24, DI
-	SHRQ	$40, R8
-	SHLQ	$40, R8
-	ORQ		R8, BX
-	ADDQ	BX, AX		// dst += len(dst)
-	NOTQ	BX			// i = -i - 1
-	INCQ	BX			// i++
 	MOVQ	(DI), DX	// t0
 	MOVQ	4(DI), R12	// t1
 	MOVQ	8(DI), R10	// t2
 	MOVQ	12(DI), SI	// t3
+	SHRQ	$40, R8
+	SHLQ	$24, R8
+	ORQ		R8, BX		// len(dst) has 48 bits
+	ADDQ	BX, AX		// dst += len(dst)
+	NOTQ	BX			// i = -i - 1
+	INCQ	BX			// i++
 	// XORQ	R11, R11	// holder
 	XORQ	R13, R13	// iv1
 	XORQ	DI, DI		// iv2
@@ -391,23 +391,23 @@ TEXT ·decrypt(SB), NOSPLIT, $0-24
 	MOVQ	·dst+8(FP), DI		// go:<1.17 dst
 	MOVQ	·teaptr+16(FP), SI	// go:<1.17 t
 	MOVQ	AX, BX		// len(data) low 24 bits
+	MOVQ	DI, R8		// dst middle 24 bits
 	SHRQ	$40, BX		// unpack len
 	SHLQ	$24, AX
 	SHRQ	$24, AX
-	MOVQ	DI, R8		// dst high 24 bits
 	SHLQ	$24, DI
 	SHRQ	$24, DI
-	SHRQ	$40, R8
-	SHLQ	$40, R8
-	ORQ		R8, BX
-	ADDQ	BX, AX		// data += len(data)
-	ADDQ	BX, DI		// dst += len(data)
-	NOTQ	BX			// i = -len - 1
-	INCQ	BX			// i++
 	MOVQ	(SI), DX	// t0
 	MOVQ	4(SI), R12	// t1
 	MOVQ	8(SI), R10	// t2
 	MOVQ	12(SI), R13	// t3
+	SHRQ	$40, R8
+	SHLQ	$24, R8
+	ORQ		R8, BX		// len(data) has 48 bits
+	ADDQ	BX, AX		// data += len(data)
+	ADDQ	BX, DI		// dst += len(data)
+	NOTQ	BX			// i = -len - 1
+	INCQ	BX			// i++
 	XORQ	SI, SI		// iv1
 	XORQ	R15, R15	// iv2
 	XORQ	R11, R11	// holder

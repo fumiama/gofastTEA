@@ -43,14 +43,13 @@ func (t TEA) Decrypt(data []byte) []byte {
 		return nil
 	}
 	dst := make([]byte, len(data))
-	var iv1, iv2, holder, tmp uint64
+	var iv1, iv2, holder uint64
 	for i := 0; i < len(dst); i += 8 {
-		block := binary.BigEndian.Uint64(data[i:])
-		tmp = t.decode(block ^ iv2)
-		iv2 = tmp
-		holder = tmp ^ iv1
-		iv1 = block
-		binary.BigEndian.PutUint64(dst[i:], holder)
+		iv1 = binary.BigEndian.Uint64(data[i:])
+		iv2 ^= iv1
+		iv2 = t.decode(iv2)
+		binary.BigEndian.PutUint64(dst[i:], iv2^holder)
+		holder = iv1
 	}
 	return dst[dst[0]&7+3 : len(data)-7]
 }
