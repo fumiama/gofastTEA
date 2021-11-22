@@ -5,8 +5,6 @@ package tea
 
 import (
 	"encoding/binary"
-	"math/rand"
-	"unsafe"
 )
 
 // Encrypt tea 加密
@@ -17,7 +15,9 @@ func (t TEA) Encrypt(src []byte) (dst []byte) {
 	lens := len(src)
 	fill := 10 - (lens+1)&7
 	dst = make([]byte, fill+lens+7)
-	_, _ = rand.Read(dst[0:fill])
+	binary.LittleEndian.PutUint32(dst, Uint32())
+	binary.LittleEndian.PutUint32(dst[4:], Uint32())
+	binary.LittleEndian.PutUint32(dst[8:], Uint32())
 	dst[0] = byte(fill-3) | 0xF8 // 存储pad长度
 	copy(dst[fill:], src)
 

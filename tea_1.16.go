@@ -5,7 +5,12 @@ package tea
 
 import (
 	"encoding/binary"
+	_ "unsafe" // required by go:linkname
 )
+
+// Uint32 returns a lock free uint32 value.
+//go:linkname Uint32 runtime.fastrand
+func Uint32() uint32
 
 // Encrypt tea 加密
 // http://bbs.chinaunix.net/thread-583468-1-1.html
