@@ -1,6 +1,12 @@
 # gofastTEA
 TEA 编码算法的 PLAN9 汇编优化实现
 
+## 编译逻辑
+- 大于等于 1.17 版本且是 amd64，使用非`asm`非内联算法
+- 大于等于 1.17 版本且不是 amd64，使用非`asm`内联算法
+- 小于 1.17 版本且是 amd64，使用`asm`内联算法
+- 小于 1.17 版本且不是 amd64，使用非`asm`内联算法
+
 ## 1.17 版本及以上
 代码与[MiraiGo](https://github.com/Mrs4s/MiraiGo/blob/574c4e57b1467225f03936342e477ee0d587a2dc/binary/tea.go)相比，替换了随机算法为`runtime.fastrand`，且简化了`Decrypt`，提升速度如下。
 ```css
