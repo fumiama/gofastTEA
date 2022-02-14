@@ -3,14 +3,7 @@
 
 package tea
 
-import (
-	"encoding/binary"
-	_ "unsafe" // required by go:linkname
-)
-
-// randuint32 returns a lock free uint32 value.
-//go:linkname randuint32 runtime.fastrand
-func randuint32() uint32
+import "encoding/binary"
 
 // Encrypt tea 加密
 // http://bbs.chinaunix.net/thread-583468-1-1.html
@@ -38,6 +31,28 @@ func (t TEA) Encrypt(src []byte) (dst []byte) {
 	return dst
 }
 
+func (t TEA) EncryptTo(src []byte, dst []byte) int {
+	lens := len(src)
+	fill := 10 - (lens+1)%8
+	binary.LittleEndian.PutUint32(dst, randuint32())
+	binary.LittleEndian.PutUint32(dst[4:], randuint32())
+	binary.LittleEndian.PutUint32(dst[8:], randuint32())
+	dst[0] = byte(fill-3) | 0xF8 // 存储pad长度
+	copy(dst[fill:], src)
+
+	var iv1, iv2, holder uint64
+	for i := 0; i < len(dst); i += 8 {
+		block := binary.BigEndian.Uint64(dst[i:])
+		holder = block ^ iv1
+		iv1 = t.encode(holder)
+		iv1 = iv1 ^ iv2
+		iv2 = holder
+		binary.BigEndian.PutUint64(dst[i:], iv1)
+	}
+
+	return fill + lens + 7
+}
+
 func (t TEA) EncryptLittleEndian(src []byte, sumtable [0x10]uint32) (dst []byte) {
 	lens := len(src)
 	fill := 10 - (lens+1)%8
@@ -61,6 +76,28 @@ func (t TEA) EncryptLittleEndian(src []byte, sumtable [0x10]uint32) (dst []byte)
 	return dst
 }
 
+func (t TEA) EncryptLittleEndianTo(src []byte, sumtable [0x10]uint32, dst []byte) int {
+	lens := len(src)
+	fill := 10 - (lens+1)%8
+	binary.LittleEndian.PutUint32(dst, randuint32())
+	binary.LittleEndian.PutUint32(dst[4:], randuint32())
+	binary.LittleEndian.PutUint32(dst[8:], randuint32())
+	dst[0] = byte(fill-3) | 0xF8 // 存储pad长度
+	copy(dst[fill:], src)
+
+	var iv1, iv2, holder uint64
+	for i := 0; i < len(dst); i += 8 {
+		block := binary.LittleEndian.Uint64(dst[i:])
+		holder = block ^ iv1
+		iv1 = t.encodeTable(holder, sumtable)
+		iv1 = iv1 ^ iv2
+		iv2 = holder
+		binary.LittleEndian.PutUint64(dst[i:], iv1)
+	}
+
+	return fill + lens + 7
+}
+
 func (t TEA) Decrypt(data []byte) []byte {
 	if len(data) < 16 || len(data)%8 != 0 {
 		return nil
@@ -77,6 +114,21 @@ func (t TEA) Decrypt(data []byte) []byte {
 	return dst[dst[0]&7+3 : len(data)-7]
 }
 
+func (t TEA) DecryptTo(data []byte, dst []byte) (from, to int) {
+	if len(data) < 16 || len(data)%8 != 0 {
+		return -1, -1
+	}
+	var iv1, iv2, holder uint64
+	for i := 0; i < len(dst); i += 8 {
+		iv1 = binary.BigEndian.Uint64(data[i:])
+		iv2 ^= iv1
+		iv2 = t.decode(iv2)
+		binary.BigEndian.PutUint64(dst[i:], iv2^holder)
+		holder = iv1
+	}
+	return int(dst[0]&7 + 3), len(data) - 7
+}
+
 func (t TEA) DecryptLittleEndian(data []byte, sumtable [0x10]uint32) []byte {
 	if len(data) < 16 || len(data)%8 != 0 {
 		return nil
@@ -91,6 +143,21 @@ func (t TEA) DecryptLittleEndian(data []byte, sumtable [0x10]uint32) []byte {
 		holder = iv1
 	}
 	return dst[dst[0]&7+3 : len(data)-7]
+}
+
+func (t TEA) DecryptLittleEndianTo(data []byte, sumtable [0x10]uint32, dst []byte) (from, to int) {
+	if len(data) < 16 || len(data)%8 != 0 {
+		return -1, -1
+	}
+	var iv1, iv2, holder uint64
+	for i := 0; i < len(dst); i += 8 {
+		iv1 = binary.LittleEndian.Uint64(data[i:])
+		iv2 ^= iv1
+		iv2 = t.decodeTable(iv2, sumtable)
+		binary.LittleEndian.PutUint64(dst[i:], iv2^holder)
+		holder = iv1
+	}
+	return int(dst[0]&7 + 3), len(data) - 7
 }
 
 //go:nosplit
@@ -201,28 +268,4 @@ func (t *TEA) decodeTable(n uint64, s [0x10]uint32) uint64 {
 	}
 
 	return uint64(v0)<<32 | uint64(v1)
-}
-
-//go:nosplit
-func NewTeaCipher(key []byte) (t TEA) {
-	if len(key) != 16 {
-		return TEA{}
-	}
-	t[3] = binary.BigEndian.Uint32(key[12:])
-	t[2] = binary.BigEndian.Uint32(key[8:])
-	t[1] = binary.BigEndian.Uint32(key[4:])
-	t[0] = binary.BigEndian.Uint32(key[0:])
-	return t
-}
-
-//go:nosplit
-func NewTeaCipherLittleEndian(key []byte) (t TEA) {
-	if len(key) != 16 {
-		return TEA{}
-	}
-	t[3] = binary.LittleEndian.Uint32(key[12:])
-	t[2] = binary.LittleEndian.Uint32(key[8:])
-	t[1] = binary.LittleEndian.Uint32(key[4:])
-	t[0] = binary.LittleEndian.Uint32(key[0:])
-	return t
 }
