@@ -86,7 +86,7 @@ func (t TEA) EncryptLittleEndianTo(src []byte, sumtable [0x10]uint32, dst []byte
 	copy(dst[fill:], src)
 
 	var iv1, iv2, holder uint64
-	for i := 0; i < len(dst); i += 8 {
+	for i := 0; i < fill+lens+7; i += 8 {
 		block := binary.LittleEndian.Uint64(dst[i:])
 		holder = block ^ iv1
 		iv1 = t.encodeTable(holder, sumtable)
@@ -119,7 +119,7 @@ func (t TEA) DecryptTo(data []byte, dst []byte) (from, to int) {
 		return -1, -1
 	}
 	var iv1, iv2, holder uint64
-	for i := 0; i < len(dst); i += 8 {
+	for i := 0; i < len(data); i += 8 {
 		iv1 = binary.BigEndian.Uint64(data[i:])
 		iv2 ^= iv1
 		iv2 = t.decode(iv2)
@@ -150,7 +150,7 @@ func (t TEA) DecryptLittleEndianTo(data []byte, sumtable [0x10]uint32, dst []byt
 		return -1, -1
 	}
 	var iv1, iv2, holder uint64
-	for i := 0; i < len(dst); i += 8 {
+	for i := 0; i < len(data); i += 8 {
 		iv1 = binary.LittleEndian.Uint64(data[i:])
 		iv2 ^= iv1
 		iv2 = t.decodeTable(iv2, sumtable)

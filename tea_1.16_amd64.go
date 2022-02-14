@@ -35,8 +35,9 @@ func (t TEA) EncryptTo(src []byte, dst []byte) int {
 	binary.LittleEndian.PutUint32(dst[8:], randuint32())
 	dst[0] = byte(fill-3) | 0xF8 // 存储pad长度
 	copy(dst[fill:], src)
-	encrypt(uintptr(*(*unsafe.Pointer)(unsafe.Pointer(&dst)))|uintptr(len(dst)<<40), uintptr(unsafe.Pointer(&t))|(uintptr(len(dst)<<16)&0xffffff00_00000000))
-	return fill + lens + 7
+	dstlen := fill + lens + 7
+	encrypt(uintptr(*(*unsafe.Pointer)(unsafe.Pointer(&dst)))|uintptr(dstlen<<40), uintptr(unsafe.Pointer(&t))|(uintptr(dstlen<<16)&0xffffff00_00000000))
+	return dstlen
 }
 
 /*

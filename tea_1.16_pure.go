@@ -78,7 +78,7 @@ func (t TEA) EncryptTo(src []byte, dst []byte) int {
 
 	var iv1, iv2, holder uint64
 	var v0, v1 uint32
-	for i := 0; i < len(dst); i += 8 {
+	for i := 0; i < fill+lens+7; i += 8 {
 		holder = binary.BigEndian.Uint64(dst[i:]) ^ iv1
 		v0, v1 = uint32(holder>>32), uint32(holder)
 		v0 += (v1 + 0x9e3779b9) ^ ((v1 << 4) + t[0]) ^ ((v1 >> 5) + t[1])
