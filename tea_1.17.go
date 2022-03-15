@@ -41,7 +41,7 @@ func (t TEA) EncryptTo(src []byte, dst []byte) int {
 	copy(dst[fill:], src)
 
 	var iv1, iv2, holder uint64
-	for i := 0; i < len(dst); i += 8 {
+	for i := 0; i < fill+lens+7; i += 8 {
 		block := binary.BigEndian.Uint64(dst[i:])
 		holder = block ^ iv1
 		iv1 = t.encode(holder)
