@@ -1,6 +1,3 @@
-//go:build ignore
-// +build ignore
-
 package tea
 
 import (
@@ -8,8 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"testing"
-
-	"github.com/Mrs4s/MiraiGo/utils"
 )
 
 var testTEA = NewTeaCipher([]byte("0123456789ABCDEF"))
@@ -32,7 +27,7 @@ var sampleData = func() [][3]string {
 	}
 	for i := range out {
 		c, _ := hex.DecodeString(out[i][ENC])
-		out[i][ENC] = utils.B2S(c)
+		out[i][ENC] = string(c)
 	}
 	return out
 }()
@@ -40,13 +35,13 @@ var sampleData = func() [][3]string {
 func TestTEA(t *testing.T) {
 	// Self Testing
 	for _, sample := range sampleData {
-		tea := NewTeaCipher(utils.S2B(sample[KEY]))
-		dat := utils.B2S(tea.Decrypt(utils.S2B(sample[ENC])))
+		tea := NewTeaCipher([]byte(sample[KEY]))
+		dat := string(tea.Decrypt([]byte(sample[ENC])))
 		if dat != sample[DAT] {
 			t.Fatalf("error decrypt %v %x", sample, dat)
 		}
-		enc := utils.B2S(tea.Encrypt(utils.S2B(sample[DAT])))
-		dat = utils.B2S(tea.Decrypt(utils.S2B(enc)))
+		enc := string(tea.Encrypt([]byte(sample[DAT])))
+		dat = string(tea.Decrypt([]byte(enc)))
 		if dat != sample[DAT] {
 			t.Fatal("error self test", sample)
 		}
