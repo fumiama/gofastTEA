@@ -30,20 +30,20 @@ func NewTeaCipherLittleEndian(key []byte) (t TEA) {
 	return
 }
 
-func (t TEA) ToBytes() []byte {
+func (t TEA) ToBytes() [16]byte {
 	var buf [16]byte
 	binary.BigEndian.PutUint32(buf[0:4], t[0])
 	binary.BigEndian.PutUint32(buf[4:8], t[1])
 	binary.BigEndian.PutUint32(buf[8:12], t[2])
 	binary.BigEndian.PutUint32(buf[12:16], t[3])
-	return buf[:]
+	return buf
 }
 
-func (t TEA) ToBytesLittleEndian() []byte {
+func (t TEA) ToBytesLittleEndian() [16]byte {
 	var buf [16]byte
 	binary.LittleEndian.PutUint32(buf[0:4], t[0])
 	binary.LittleEndian.PutUint32(buf[4:8], t[1])
 	binary.LittleEndian.PutUint32(buf[8:12], t[2])
 	binary.LittleEndian.PutUint32(buf[12:16], t[3])
-	return buf[:]
+	return buf
 }
