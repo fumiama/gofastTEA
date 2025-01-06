@@ -1,5 +1,5 @@
-//go:build go1.17 && amd64
-// +build go1.17,amd64
+//go:build go1.17
+// +build go1.17
 
 package tea
 
@@ -111,7 +111,11 @@ func (t TEA) Decrypt(data []byte) []byte {
 		binary.BigEndian.PutUint64(dst[i:], iv2^holder)
 		holder = iv1
 	}
-	return dst[dst[0]&7+3 : len(data)-7]
+	a, b := int(dst[0]&7+3), len(data)-7
+	if a >= b {
+		return nil
+	}
+	return dst[a:b]
 }
 
 func (t TEA) DecryptTo(data []byte, dst []byte) (from, to int) {
@@ -126,7 +130,11 @@ func (t TEA) DecryptTo(data []byte, dst []byte) (from, to int) {
 		binary.BigEndian.PutUint64(dst[i:], iv2^holder)
 		holder = iv1
 	}
-	return int(dst[0]&7 + 3), len(data) - 7
+	from, to = int(dst[0]&7+3), len(data)-7
+	if from >= to {
+		return -1, -1
+	}
+	return
 }
 
 func (t TEA) DecryptLittleEndian(data []byte, sumtable [0x10]uint32) []byte {
@@ -142,7 +150,11 @@ func (t TEA) DecryptLittleEndian(data []byte, sumtable [0x10]uint32) []byte {
 		binary.LittleEndian.PutUint64(dst[i:], iv2^holder)
 		holder = iv1
 	}
-	return dst[dst[0]&7+3 : len(data)-7]
+	a, b := int(dst[0]&7+3), len(data)-7
+	if a >= b {
+		return nil
+	}
+	return dst[a:b]
 }
 
 func (t TEA) DecryptLittleEndianTo(data []byte, sumtable [0x10]uint32, dst []byte) (from, to int) {
@@ -157,7 +169,11 @@ func (t TEA) DecryptLittleEndianTo(data []byte, sumtable [0x10]uint32, dst []byt
 		binary.LittleEndian.PutUint64(dst[i:], iv2^holder)
 		holder = iv1
 	}
-	return int(dst[0]&7 + 3), len(data) - 7
+	from, to = int(dst[0]&7+3), len(data)-7
+	if from >= to {
+		return -1, -1
+	}
+	return
 }
 
 //go:nosplit
@@ -215,6 +231,7 @@ func (t *TEA) encodeTable(n uint64, s [0x10]uint32) uint64 {
 }
 
 // 每次8字节
+//
 //go:nosplit
 func (t *TEA) decode(n uint64) uint64 {
 	v0, v1 := uint32(n>>32), uint32(n)
@@ -257,6 +274,7 @@ func (t *TEA) decode(n uint64) uint64 {
 }
 
 // 每次8字节
+//
 //go:nosplit
 func (t *TEA) decodeTable(n uint64, s [0x10]uint32) uint64 {
 	v0, v1 := uint32(n>>32), uint32(n)

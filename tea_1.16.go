@@ -1,5 +1,5 @@
-//go:build (!go1.17 && amd64) || !amd64
-// +build !go1.17,amd64 !amd64
+//go:build !go1.17
+// +build !go1.17
 
 package tea
 
@@ -8,6 +8,7 @@ import "encoding/binary"
 // Encrypt tea 加密
 // http://bbs.chinaunix.net/thread-583468-1-1.html
 // 感谢xichen大佬对TEA的解释
+//
 //go:nosplit
 func (t TEA) EncryptLittleEndian(src []byte, sumtable [0x10]uint32) (dst []byte) {
 	lens := len(src)
@@ -113,7 +114,11 @@ func (t TEA) Decrypt(data []byte) []byte {
 		holder = iv1
 	}
 
-	return dst[dst[0]&7+3 : len(data)-7]
+	a, b := int(dst[0]&7+3), len(data)-7
+	if a >= b {
+		return nil
+	}
+	return dst[a:b]
 }
 
 //go:nosplit
@@ -165,7 +170,11 @@ func (t TEA) DecryptTo(data []byte, dst []byte) (from, to int) {
 		holder = iv1
 	}
 
-	return int(dst[0]&7 + 3), len(data) - 7
+	from, to = int(dst[0]&7+3), len(data)-7
+	if from >= to {
+		return -1, -1
+	}
+	return
 }
 
 //go:nosplit
@@ -190,7 +199,11 @@ func (t TEA) DecryptLittleEndian(data []byte, sumtable [0x10]uint32) []byte {
 		holder = iv1
 	}
 
-	return dst[dst[0]&7+3 : len(data)-7]
+	a, b := int(dst[0]&7+3), len(data)-7
+	if a >= b {
+		return nil
+	}
+	return dst[a:b]
 }
 
 //go:nosplit
@@ -214,5 +227,9 @@ func (t TEA) DecryptLittleEndianTo(data []byte, sumtable [0x10]uint32, dst []byt
 		holder = iv1
 	}
 
-	return int(dst[0]&7 + 3), len(data) - 7
+	from, to = int(dst[0]&7+3), len(data)-7
+	if from >= to {
+		return -1, -1
+	}
+	return
 }
